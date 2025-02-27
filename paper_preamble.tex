@@ -1,0 +1,68 @@
+%% General settings
+\documentclass[sigplan,screen,authorversion=true]{acmart}
+\settopmatter{printfolios=false,printccs=false,printacmref=false}
+
+%% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{softdev}
+
+%% Listings settings
+\lstset{
+    basicstyle=\ttfamily\small,
+    xleftmargin=\parindent,
+    lineskip=-1pt,
+    numbers=left,
+    numbersep=.8em,
+    numberstyle=\tiny\tt\color{gray},
+    captionpos=b,
+    escapeinside={{<!}{!>}},
+    commentstyle=\color{gray}\itshape,
+    keywordstyle=\textbf,
+}
+
+% from https://tex.stackexchange.com/questions/264361/skipping-line-numbers-in-lstlisting#264373
+\let\origthelstnumber\thelstnumber
+\makeatletter
+\newcommand*\Suppressnumber{%
+  \lst@AddToHook{OnNewLine}{%
+    \let\thelstnumber\relax%
+     \advance\c@lstnumber-\@ne\relax%
+    }%
+}
+
+\renewcommand{\sectionautorefname}{Section}
+\newcommand\footnoteurl[2]{\footnote{\url{#1}, accessed {#2}}}
+\setlist{topsep=0pt, leftmargin=*}
+
+%% Specific settings and macros
+
+%% Title
+\title{Compartments and Processes: A CHERIfied approach}
+
+%% Authors
+\author{Andrei Lascu}
+\affiliation{%
+    \institution{King's College London}
+    \city{London}
+    \country{United Kingdom}
+}
+\orcid{0000-0002-6623-2053}
+
+\author{Laurence Tratt}
+\affiliation{%
+    \institution{King's College London}
+    \city{London}
+    \country{United Kingdom}
+}
+\orcid{0000-0002-5258-3805}
+
+%% Websites
+\thanks{Authors' URLs: %
+    A.~Lascu~[\url{https://andreil.eu/}],
+    L.~Tratt~[\url{https://tratt.net/laurie/}].
+}
