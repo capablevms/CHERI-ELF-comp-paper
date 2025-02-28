@@ -14,21 +14,101 @@ Data Compartmentalisation for CHERI
 Start
 
 \section{Background}
-Passage
+\begin{itemize}
+    \item CHERI
+    \item compartmentalisation
+\end{itemize}
 
 \section{Compartmentalisation Methods and Approaches}
-Types
+
+\begin{itemize}
+    \item Discuss PCC versus DDC compartmentalisation
+    \item Discuss Morello Executive vs Restricted mode, including compartment-in-compartment issue
+    \item Propose some uses for a few particular compartmentalisation methods (dunno which for now, think of a few)
+    \item General ``embarassingly compartmentalisable'' examples: browser tabs, tabs in general, external libraries (the stuff that Cambridge are doing with their linker), memory allocator, secrets
+\end{itemize}
+
+What does compartmentalisation mean? Well, we can think of it as a method of
+separating two spaces. In computing, processes are a good example of
+compartmentalisation: two distinct programs that (ideally) cannot interact with
+one another (except through determined pathways via the kernel), and generally
+should be unaware of one another. Compartmentalisation then becomes useful to
+protect the system and other processes from a potential rogue or captured
+process. Further, how is compartmentalisation defined? Well, this is likely up
+to the kernel, to ensure virtual memory spaces do not leak, and hardware
+resources are utilised appropriately. There is, to our knowledge, no
+one-size-fits-all implementation\andrei{Double check}.
+
+Now, what does compartmentalisation mean in CHERI, or rather from the prism of
+CHERI capabilities? A definition which, we believe, encompasses both the intent
+behind what compartmentalisation is used for, as well as its usage in both
+CHERI purecap and hybrid modes, is \textbf{``the union of all memory spaces
+reachable by all capabilities in use at a given time''}. What this means is,
+during program execution, if we pause execution of a CHERI program, and look at
+all capabilities in registers, then at all capabilities stored in memory
+accessible via those capabilities in registers, then repeat until a fixed
+point, we can say the union of all those reachable memory regions is the
+current compartment. Normally, in a default CHERI hybrid execution, where there
+are no explicit capabilities, the address space is entirely reachable, due to
+the default, unbounded capabilities installed in the \pcc~and \ddc~registers.
+In a purecap CHERI execution, the intrinsic compartment is very restricted, as
+the bounds of the current \pcc~capability will only refer to the current
+instruction, and then we need to compute the transitive closure\andrei{is this
+the right word?} of any capabilities in other registers.
 
 \section{Implementation}
-Work
+\begin{itemize}
+    \item Generic library, attachable to any existing source code, with no required source code changes
+    \item Simple API for using compartments, abstracting away all CHERI tidbits
+    \item Decide on a manager model, potentially could have a ``mutually distrusting compartments'' model, with in-memory sealed capabilities
+    \item Ended up writing a runtime loader for ELF binaries
+    \item Discuss design choices, TLS handling, duplicate \texttt{so} files in compartments, \texttt{malloc} interception
+    \item Discuss optimisation possibilities, such as using existing loader as basis, using existing \texttt{malloc}, one compartment per so for less memory usage
+    \item Mention potential performance gain from using ``compartments as processes''
+\end{itemize}
+
+We aimed to write an API for compartmentalisation in the form of a dynamic
+library. An end-user could link our API against their code to gain access to
+generic compartmentalisation actions, such as create a compartment, execute it,
+and destroy it. When thinking at what level we should compartmentalise, the
+answer was: to begin with, as simple a level as possible. To us, this meant
+compartmentalising against pre-compiled static binaries, as they would
+essentially be a blob of stand-alone executable code which we can load into
+memory, without requiring any external linkage or transitions to work. While
+this seemed to be the easiest choice of compartmentalisation granularity, we
+did not realise at the time that we would embark on a journey to implement a
+runtime loader.
+
+\andrei{insert static binary rant here - fixed compile-time loading offset, lack of support for static PIE binaries in FreeBSD}
 
 \section{Early Evaluation}
-Eval
+\begin{itemize}
+    \item Try to evaluate system \texttt{rtld} performance versus our loader (this will likely be very small, maybe nanoseconds - try on a slow VM?)
+    \item Show evaluation results of Hello World lua script (this is the one where we aimed, and had 2x speedup, but only 20% after PR
+    \item Evaluate from both security and performance aspect
+    \item Security points
+    \begin{itemize}
+        \item we introduce another single-point of failure, the compartment manager
+        \item security dependent on CHERI sealed capabilities
+        \item mention issue with using PCC as DDC (I haven't checked if removing the ``use system registers'' permission fixes this)
+        \item each compartment overhead should be 2 capabilities worth of memory usage
+    \end{itemize}
+\end{itemize}
 
 \section{Further Work}
-More
+\begin{itemize}
+    \item Performance improvements, especially using a useful malloc
+    \item Consider merging with system \texttt{rtld}
+    \item Expand to PCC compartmentalisation (should be straightforward, just need to work on the assembly part mostly, or even entirely)
+    \item Implement compartmentalisation in an actual tool (a browser like w3m, or a VM like Lua, something straightforward)
+\end{itemize}
 
 \section{Conclusion}
+\begin{itemize}
+    \item Proof of concept for CHERI hybrid, using DDC for compartmentalisation
+    \item Idea using compartments as processes
+    \item Initial performance poor, but we overcome the CHERI hardware performance overhead at least
+\end{itemize}
 End\cite{sison95simultaneous}
 
 \bibliographystyle{ACM-Reference-Format}
